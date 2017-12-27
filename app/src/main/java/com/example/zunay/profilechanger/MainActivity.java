@@ -9,12 +9,14 @@ import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public abstract class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends Activity implements SensorEventListener{
 
     TextView textView;
     SensorManager sensorManager;
     Sensor sensor;
+    static boolean flipOver;
     private AudioManager myAudioManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +27,6 @@ public abstract class MainActivity extends Activity implements SensorEventListen
         textView=findViewById(R.id.text);
         sensorManager.registerListener(this,sensor,SensorManager.SENSOR_DELAY_NORMAL);
         myAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-
     }
 
     @Override
@@ -36,13 +37,43 @@ public abstract class MainActivity extends Activity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        textView.setText(String.valueOf(sensorEvent.values[0]));
-        myAudioManager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+        if(sensorEvent.sensor.getType()==Sensor.TYPE_PROXIMITY){
+            if(sensorEvent.values[0]<5){
+                flipOver=true;
+            }else {
+                flipOver=false;
+            }
+        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    synchronized (this) {
+                        try {
+                            if (flipOver==true) {
+                                if (myAudioManager != null) {
+                                    myAudioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "AudioManager is null", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                if (myAudioManager != null) {
+                                    myAudioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
 
+            }
+        };
+        Thread thread= new Thread(runnable);
+        thread.start();
     }
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
-        
+
     }
 }
