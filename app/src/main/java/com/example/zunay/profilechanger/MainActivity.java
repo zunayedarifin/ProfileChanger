@@ -66,7 +66,15 @@ public class MainActivity extends Activity implements SensorEventListener{
                                 } else {
                                     Toast.makeText(getApplicationContext(), "AudioManager is null", Toast.LENGTH_SHORT).show();
                                 }
-                            } else {
+                            }
+                            else if (faceDown==true) {
+                                if (myAudioManager != null) {
+                                    myAudioManager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "AudioManager is null", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                            else {
                                 if (myAudioManager != null) {
                                     myAudioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
                                 }
