@@ -15,8 +15,8 @@ public class MainActivity extends Activity implements SensorEventListener{
 
     TextView textView;
     SensorManager sensorManager;
-    Sensor sensor;
-    static boolean flipOver;
+    Sensor sensor,sensor_accelerometer;
+    static boolean faceDown,flipOver;
     private AudioManager myAudioManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,8 +24,10 @@ public class MainActivity extends Activity implements SensorEventListener{
         setContentView(R.layout.activity_main);
         sensorManager=(SensorManager) getSystemService(SENSOR_SERVICE);
         sensor=sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        sensor=sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         textView=findViewById(R.id.text);
-        sensorManager.registerListener(this,sensor,SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this,sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this,sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY),SensorManager.SENSOR_DELAY_NORMAL);
         myAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
     }
 
@@ -37,11 +39,19 @@ public class MainActivity extends Activity implements SensorEventListener{
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+        if(sensorEvent.sensor.getType()==Sensor.TYPE_ACCELEROMETER){
+            if(sensorEvent.values[2] < 0){
+                flipOver = true;
+            }else {
+                flipOver = false;
+            }
+        }
         if(sensorEvent.sensor.getType()==Sensor.TYPE_PROXIMITY){
             if(sensorEvent.values[0]<5){
-                flipOver=true;
+                faceDown=true;
+
             }else {
-                flipOver=false;
+                faceDown=false;
             }
         }
         Runnable runnable = new Runnable() {
@@ -50,7 +60,7 @@ public class MainActivity extends Activity implements SensorEventListener{
                 while (true) {
                     synchronized (this) {
                         try {
-                            if (flipOver==true) {
+                            if (faceDown==true && flipOver==true) {
                                 if (myAudioManager != null) {
                                     myAudioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
                                 } else {
